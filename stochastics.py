@@ -8,6 +8,7 @@ def lcg(x_i, a, c, M):
 
 lcg_generator = lcg(0, 135412, 5121, 1712289)
 take = lambda f, n: list(itertools.islice(f, n))
+colors = ["#1A2F4B", "#28475C", "#2F8886", "#84C69B"]
 
 
 def up_down(x):
