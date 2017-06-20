@@ -1,126 +1,103 @@
+#include <memory>
 #include <cmath>
-#include <random>
-#include <fstream>
-#include <iostream>
+#include <stdexcept>
+//#include <random>
+#include <cstdlib>
 
-using namespace std;
+#include "denoising.hpp"
 
-template<size_t H, size_t W>
-unsigned int neighbourhood(const unsigned int (&X)[H][W],
-                           const unsigned int i, const unsigned int j,
-                           const unsigned int colour)
+using namespace denoising;
+
+Ising::Ising(const std::vector<std::vector<float>> y, float b, float sigma)
 {
-  unsigned int same_colours = 0;
+  beta = b;
+  noise = sigma;
+  Y = y;
 
-  // Left, right, up, down
-  if (i-1 > -1)  { if (X[i-1][j] == colour) same_colours++; }
-  if (i+1 <  H)  { if (X[i+1][j] == colour) same_colours++; }
-  if (j+1 <  W)  { if (X[i][j+1] == colour) same_colours++; }
-  if (j-1 > -1)  { if (X[i][j-1] == colour) same_colours++; }
+  height = (int) Y.size();
+  width  = (int) Y[0].size();
 
-  // Diagonal
-  if (i-1 > -1 && j-1 > -1)  { if (X[i-1][j-1] == colour) same_colours++; }
-  if (i+1 <  H && j-1 > -1)  { if (X[i+1][j-1] == colour) same_colours++; }
-  if (i+1 <  H && j+1 <  W)  { if (X[i+1][j+1] == colour) same_colours++; }
-  if (i-1 > -1 && j+1 <  W)  { if (X[i-1][j+1] == colour) same_colours++; }
+  X.resize(height);
 
-  // Extremal
-  if (i-2 > -1)  { if (X[i-2][j] == colour) same_colours++; }
-  if (i+2 <  H)  { if (X[i+2][j] == colour) same_colours++; }
-  if (j+2 <  W)  { if (X[i][j+2] == colour) same_colours++; }
-  if (j-2 > -1)  { if (X[i][j-2] == colour) same_colours++; }
-
-  return same_colours;
+  for (int i = 0; i < height; i++) {
+    X[i].resize(width);
+  }
 }
 
-template<size_t H, size_t W>
-void metropolisHastings(unsigned int (&X)[H][W], const float (&Y)[H][W],
-                        const unsigned int iterations,
-                        const float noise, const float beta)
+Ising::~Ising()
 {
-  unsigned int inverse, k;
+
+}
+
+/**
+ * Uses Metropolis-Hastings to solve the image.
+ */
+std::vector<std::vector<int>> Ising::solve(const unsigned int iterations)
+{
+  unsigned int inverse;
   float h, hInverse;
   float d, dInverse;
-  float p, u;
+  float p;
 
-  // Use Mersenne Twister random number generator
-  random_device device;
-  mt19937 generator(device());
-  uniform_real_distribution<double> U(0, 1);
+  //std::random_device device;
+  //std::mt19937 generator(device());
+  //std::uniform_real_distribution<float> U(0, 1);
 
-  for (k = 0; k < iterations; k++) {
-    if (k % 5 == 0) {
-      cout << "iteration: " << k << endl;
+  for (int i = 0; i < height; i++) {
+    for (int j = 0; j < width; j++) {
+      X[i][j] = ((float) rand() / (RAND_MAX));
     }
+  }
 
-    for (size_t i = 0; i < H; i++) {
-      for (size_t j = 0; j < W; j++) {
-        inverse  = 1 - X[i][j];
+  for (size_t k = 0; k < iterations; k++) {
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+
+        inverse  = round(1 - X[i][j]);
 
         h        = -1.0/(2*noise) * pow((Y[i][j] - X[i][j]), 2);
         hInverse = -1.0/(2*noise) * pow((Y[i][j] - inverse), 2);
 
-        d        = beta * neighbourhood(X, i, j, X[i][j]) + h;
-        dInverse = beta * neighbourhood(X, i, j, inverse) + hInverse;
+        Point coords = { i, j };
 
-        u = U(generator);
+        d        = beta * neighbourhood(coords, X[i][j]) + h;
+        dInverse = beta * neighbourhood(coords, inverse) + hInverse;
+
         p = exp(fmin(0, dInverse - d));
 
-        if (u < p) {
+        if (((float) rand() / (RAND_MAX)) < p) {
           X[i][j] = inverse;
         }
       }
     }
   }
-  cout << "iteration: " << k << endl;
+
+  return X;
 }
 
-int main(int argc, char const *argv[]) {
-  unsigned int iterations = 1;
-  float noise = 0.1;
-  float beta  = 1.0;
+int Ising::neighbourhood(const Point coords, const float colour)
+{
+  int same_colours = 0.0;
+  int i = coords.x;
+  int j = coords.y;
 
-  if (argc > 1) iterations = atoi(argv[1]);
-  if (argc > 2) noise = atof(argv[2]);
-  if (argc > 3) beta  = atof(argv[3]);
+  // Left, right, up, down
+  try { if (X.at(i-1).at(j) == colour) same_colours++; } catch (const std::out_of_range& oor) {}
+  try { if (X.at(i+1).at(j) == colour) same_colours++; } catch (const std::out_of_range& oor) {}
+  try { if (X.at(i).at(j-1) == colour) same_colours++; } catch (const std::out_of_range& oor) {}
+  try { if (X.at(i).at(j+1) == colour) same_colours++; } catch (const std::out_of_range& oor) {}
 
-  // Load in files
-  ifstream inputFile("data/noisy.txt", ifstream::in);
-  ofstream outputFile("denoised.txt", ofstream::out);
+  // Diagonal
+  try { if (X.at(i-1).at(j-1) == colour) same_colours++; } catch (const std::out_of_range& oor) {}
+  try { if (X.at(i+1).at(j-1) == colour) same_colours++; } catch (const std::out_of_range& oor) {}
+  try { if (X.at(i+1).at(j+1) == colour) same_colours++; } catch (const std::out_of_range& oor) {}
+  try { if (X.at(i-1).at(j+1) == colour) same_colours++; } catch (const std::out_of_range& oor) {}
 
-  // Instantiate Mersenne Twister
-  random_device device;
-  mt19937 generator(device());
-  uniform_int_distribution<unsigned int> U(0, 1);
+  // Extremal
+  try { if (X.at(i-2).at(j) == colour) same_colours++; } catch (const std::out_of_range& oor) {}
+  try { if (X.at(i+2).at(j) == colour) same_colours++; } catch (const std::out_of_range& oor) {}
+  try { if (X.at(i).at(j-2) == colour) same_colours++; } catch (const std::out_of_range& oor) {}
+  try { if (X.at(i).at(j+2) == colour) same_colours++; } catch (const std::out_of_range& oor) {}
 
-  // Iniitalise X and Y
-  const size_t height = 328;
-  const size_t width  = 400;
-
-  unsigned int X[height][width];
-  float        Y[height][width];
-
-  for (size_t i = 0; i < height; i++) {
-    for (size_t j = 0; j < width; j++) {
-      X[i][j] = U(generator);
-      inputFile >> Y[i][j];
-    }
-  }
-
-  // Perform computation
-  metropolisHastings(X, Y, iterations, noise, beta);
-
-  // Write output to file
-  if (outputFile.is_open()) {
-    for (size_t i = 0; i < height; i++) {
-      for (size_t j = 0; j < width; j++) {
-        outputFile << X[i][j] << " ";
-      }
-    }
-  }
-
-  inputFile.close();
-  outputFile.close();
-
-  return 0;
+  return same_colours;
 }
