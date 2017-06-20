@@ -1,11 +1,11 @@
 # distutils: language = c++
 # distutils: extra_compile_args = -std=c++11
-# distutils: sources = ising.cpp potts.cpp
+# distutils: sources = cpp/ising.cpp cpp/potts.cpp
 
 from libcpp.vector cimport vector
 
 # c++ interface to cython
-cdef extern from "denoising.hpp" namespace "denoising":
+cdef extern from "cpp/denoising.hpp" namespace "denoising":
   cdef cppclass Ising:
     Ising(vector[vector[float]], float, float) except +
     vector[vector[int]] solve(int)

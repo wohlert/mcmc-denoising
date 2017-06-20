@@ -4,3 +4,5 @@ __pycache__
 build
 .DS_Store
 cpp/history
+cpp/build
+./denoising.cpp

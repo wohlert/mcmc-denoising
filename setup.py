@@ -9,7 +9,7 @@ from Cython.Build import cythonize
 
 setup(ext_modules = cythonize(Extension(
            "denoising",                                # the extension name
-           sources=["denoising.pyx", "ising.cpp", "potts.cpp"], # the Cython source and
+           sources=["denoising.pyx", "cpp/ising.cpp", "cpp/potts.cpp"], # the Cython source and
                                                   # additional C++ source files
            language="c++",                        # generate and compile C++ code
            extra_compile_args=["-std=c++11"],
