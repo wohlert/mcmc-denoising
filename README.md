@@ -4,12 +4,14 @@ This project uses Markov-chain Monte Carlo (MCMC) methods to sample from a prior
 
 This project is built up of two C++ classes, `Ising` and `Potts` for binary and grayscale images respectively. Additionally, we provide a Cython bridge that enables use directly from Python.
 
-## Example
+## Examples
 
-Original image
+**Original image**:
+
 ![](data/lars-noisy-gray.jpg)
 
-Denoised image using Metropolis-Hastings based on the Potts model.
+**Denoised image using Metropolis-Hastings based on the Potts model**.
+
 ![](data/lars-denoised.jpg)
 
 
