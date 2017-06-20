@@ -85,7 +85,7 @@ int main(int argc, char const *argv[]) {
   if (argc > 3) beta  = atof(argv[3]);
 
   // Load in files
-  ifstream inputFile("horse.txt", ifstream::in);
+  ifstream inputFile("data/noisy.txt", ifstream::in);
   ofstream outputFile("denoised.txt", ofstream::out);
 
   // Instantiate Mersenne Twister
@@ -94,8 +94,8 @@ int main(int argc, char const *argv[]) {
   uniform_int_distribution<unsigned int> U(0, 1);
 
   // Iniitalise X and Y
-  const size_t height = 400;
-  const size_t width  = 328;
+  const size_t height = 328;
+  const size_t width  = 400;
 
   unsigned int X[height][width];
   float        Y[height][width];

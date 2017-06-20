@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.misc import imsave
 
-shape = (300, 465)
+#shape = (320, 480)
+shape = (-1, 400)
 
 A = np.loadtxt("denoised.txt")
 imsave("denoised.jpg", A.reshape(shape))

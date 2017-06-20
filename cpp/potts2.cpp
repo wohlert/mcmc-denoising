@@ -5,8 +5,25 @@
 
 using namespace std;
 
-const size_t height = 300;
-const size_t width  = 465;
+const size_t height = 320;
+const size_t width  = 480;
+
+template<size_t H, size_t W>
+void saveImage(const double (&Z)[H][W], const unsigned int k)
+{
+  string filename = "history/history_" + std::to_string(k) + ".txt";
+  ofstream saveFile(filename, ofstream::out);
+
+  if (saveFile.is_open()) {
+    for (size_t i = 0; i < H; i++) {
+      for (size_t j = 0; j < W; j++) {
+        saveFile << Z[i][j] << " ";
+      }
+    }
+  }
+
+  saveFile.close();
+}
 
 /**
  * arraystd
@@ -117,6 +134,8 @@ void metropolisHastings(double (&X)[H][W], const double (&Y)[H][W],
   mt19937 generator(device());
   uniform_real_distribution<double> U(0, 1);
 
+  double Z[height][width];
+
   for (k = 0; k < iterations; k++) {
     if (k % 5 == 0) {
       cout << "iteration: " << k << endl;
@@ -136,9 +155,53 @@ void metropolisHastings(double (&X)[H][W], const double (&Y)[H][W],
         if (U(generator) < p) {
           X[i][j] = candidate;
         }
+        Z[i][j] = X[i][j];
       }
     }
+    saveImage(Z, k);
   }
+  cout << "iteration: " << k << endl;
+}
+
+template<size_t H, size_t W>
+void mapEstimate(double (&X)[H][W], const double (&Y)[H][W],
+                 const unsigned int iterations, size_t bins,
+                 const double noise, const double beta, const double tInit)
+{
+  unsigned int k;
+  double candidate;
+  double p;
+  double t;
+
+  t = tInit;
+
+  // Use Mersenne Twister random number generator
+  random_device device;
+  mt19937 generator(device());
+  uniform_real_distribution<double> U(0, 1);
+
+  for (k = 0; k < iterations; k++) {
+    if (k % 5 == 0) {
+      cout << "iteration: " << k << endl;
+    }
+
+    for (size_t i = 0; i < H; i++) {
+      for (size_t j = 0; j < W; j++) {
+
+        // Choose random candidate from X
+        candidate  = (double)((rand()+1) % bins)/bins;
+
+        p = fmin(1, neighbourhood(X, candidate, i, j, noise, beta)/
+                    neighbourhood(X, X[i][j],   i, j, noise, beta)) * exp(-t);
+
+        if (U(generator) < p) {
+          X[i][j] = candidate;
+        }
+      }
+    }
+    t = tInit * pow(0.995, iterations);
+  }
+
   cout << "iteration: " << k << endl;
 }
 
@@ -146,16 +209,20 @@ int main(int argc, char const *argv[]) {
   size_t iterations = 1;
   size_t bins = 10;
   double beta  = 100;
+  string filename = "denoised.txt";
 
   if (argc > 1) iterations = atoi(argv[1]);
   if (argc > 2) beta = atof(argv[2]);
+  if (argc > 3) bins = atoi(argv[3]);
+  if (argc > 4) filename = argv[4];
 
   // Load in files
-  ifstream inputFile("data/noisy.txt", ifstream::in);
+  ifstream inputFile("data/lars-noisy-gray.txt", ifstream::in);
 
   // Inititalise X and Y
   double X[height][width];
   double Y[height][width];
+
 
   if (inputFile.is_open()) {
     for (size_t i = 0; i < height; i++) {
@@ -163,6 +230,7 @@ int main(int argc, char const *argv[]) {
         inputFile >> Y[i][j];
       }
     }
+
 
     for (size_t i = 0; i < height; i++) {
       for (size_t j = 0; j < width; j++) {
@@ -172,9 +240,10 @@ int main(int argc, char const *argv[]) {
   }
 
   // Perform computation
-  metropolisHastings(X, Y, iterations, bins, arraystd(Y), beta);
+  //metropolisHastings(X, Y, iterations, bins, arraystd(Y), beta);
+  mapEstimate(X, Y, iterations, bins, arraystd(Y), beta, 4);
 
-  ofstream outputFile("denoised.txt", ofstream::out);
+  ofstream outputFile(filename, ofstream::out);
   // Write output to file
   if (outputFile.is_open()) {
     for (size_t i = 0; i < height; i++) {
