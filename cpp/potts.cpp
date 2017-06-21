@@ -10,7 +10,7 @@ using namespace denoising;
 
 float normpdf(float x, float variance)
 {
-  return exp(-pow(x, 2)/(2*variance))/sqrt(2*M_PI*variance);
+  return -pow(x, 2)/(2*variance);
 }
 
 float discretise(float x, int bins)
@@ -73,7 +73,7 @@ std::vector<std::vector<float>> Potts::metropolisHastings(const unsigned int ite
         candidate = (float)((rand()+1) % bins)/bins;
 
         Point coords = { i, j };
-        p = fmin(1, neighbourhood(coords, candidate)/neighbourhood(coords, X[i][j]));
+        p = exp(fmin(0, neighbourhood(coords, candidate) - neighbourhood(coords, X[i][j])))/sqrt(2*M_PI*noise);
         //p = hook->update(p);
 
         if (((float) rand() / (RAND_MAX)) < p) {
@@ -105,7 +105,7 @@ std::vector<std::vector<float>> Potts::metropolisHastings(const unsigned int ite
         candidate = (float)((rand()+1) % bins)/bins;
 
         Point coords = { i, j };
-        p = fmin(1, neighbourhood(coords, candidate)/neighbourhood(coords, X[i][j]));
+        p = exp(fmin(0, neighbourhood(coords, candidate) - neighbourhood(coords, X[i][j])))/sqrt(2*M_PI*noise);
         //p = hook->update(p);
 
         if (((float) rand() / (RAND_MAX)) < p) {
@@ -142,8 +142,7 @@ std::vector<std::vector<float>> Potts::MAP(const unsigned int iterations, const 
         candidate = (float)((rand()+1) % bins)/bins;
 
         Point coords = { i, j };
-        p = fmin(1, neighbourhood(coords, candidate)/neighbourhood(coords, X[i][j]));
-        p = p * exp(-t);
+        p = exp(fmin(0, neighbourhood(coords, candidate) - neighbourhood(coords, X[i][j]))/t)/sqrt(2*M_PI*noise);
 
         if (((float) rand() / (RAND_MAX)) < p) {
           X[i][j] = candidate;
@@ -175,8 +174,7 @@ std::vector<std::vector<float>> Potts::MAP(const unsigned int iterations, std::v
         candidate = (float)((rand()+1) % bins)/bins;
 
         Point coords = { i, j };
-        p = fmin(1, neighbourhood(coords, candidate)/neighbourhood(coords, X[i][j]));
-        p = p * exp(-t);
+        p = exp(fmin(0, neighbourhood(coords, candidate) - neighbourhood(coords, X[i][j]))/t)/sqrt(2*M_PI*noise);
 
         if (((float) rand() / (RAND_MAX)) < p) {
           X[i][j] = candidate;
@@ -219,26 +217,27 @@ float Potts::neighbourhood(const Point coords, const float colour)
   } catch (const std::exception& e) {}
 
   try {
-    colourSum = normpdf(X.at(i).at(j) - colour, noise) * exp(beta * colourSum);
+    colourSum = normpdf(X.at(i).at(j) - colour, noise) + beta * colourSum;
   } catch (const std::exception& e) {}
 
   return colourSum;
 }
 
-/**
+/*
 int main(int argc, char const *argv[]) {
   std::vector<std::vector<float>> Y;
+  int n = 100;
 
-  Y.resize(10);
-  for (size_t i = 0; i < 10; i++) {
-    Y[i].resize(10);
-    for (size_t j = 0; j < 10; j++) {
+  Y.resize(n);
+  for (size_t i = 0; i < n; i++) {
+    Y[i].resize(n);
+    for (size_t j = 0; j < n; j++) {
       Y[i][j] = i + j;
     }
   }
 
   std::unique_ptr<Potts> potts(new Potts(Y, 10, 0.1, 10));
-  potts->MAP(10, 4);
+  potts->MAP(100, 4);
 
   return 0;
 }
