@@ -55,11 +55,44 @@ Potts::~Potts()
 std::vector<std::vector<float>> Potts::metropolisHastings(const unsigned int iterations)
 {
   history.clear();
+
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
       X[i][j] = discretise(Y[i][j], bins);
     }
   }
+
+  float candidate;
+  float p = 0;
+
+  for (size_t k = 0; k < iterations; k++) {
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+
+        // Choose random candidate from X
+        candidate = (float)((rand()+1) % bins)/bins;
+
+        Point coords = { i, j };
+        p = fmin(1, neighbourhood(coords, candidate)/neighbourhood(coords, X[i][j]));
+        //p = hook->update(p);
+
+        if (((float) rand() / (RAND_MAX)) < p) {
+          X[i][j] = candidate;
+        }
+      }
+    }
+    //hook->iterate(k, X);
+    history.push_back(X);
+  }
+
+  return X;
+}
+
+std::vector<std::vector<float>> Potts::metropolisHastings(const unsigned int iterations, std::vector<std::vector<float>> x)
+{
+  history.clear();
+
+  X = x;
 
   float candidate;
   float p = 0;

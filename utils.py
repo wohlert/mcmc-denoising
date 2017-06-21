@@ -1,3 +1,7 @@
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.utils import shuffle
+
 def mode(ndarray, axis=0):
     # Check inputs
     ndarray = np.asarray(ndarray)
@@ -50,30 +54,26 @@ def mode(ndarray, axis=0):
     index.insert(axis, np.argmax(counts, axis=axis))
     return sort[index]
 
-def neighbourhood_second_order(X, colour, coords, phi, n=4, order=1):
-    colours = []
-    i, j = coords
-    H, W = X.shape
 
-    if i-1 > -1:
-        colours.append(X[i-1,j])
-    if i+1 <  H:
-        colours.append(X[i+1,j])
-    if j+1 <  W:
-        colours.append(X[i,j+1])
-    if j-1 > -1:
-        colours.append(X[i,j-1])
+def discretise(img, bins=10):
+    image = img.copy()
+    image = np.round(image * bins) / bins
+    image[image < 1/bins] = 1/bins
+    image[image > (1 - 1/bins)] = 1 - 1/bins
+    return image
 
-    if n == 8:
-        if i-1 > -1 and j-1 > -1:
-            colours.append(X[i-1, j-1])
-        if i+1 <  H and j-1 > -1:
-            colours.append(X[i+1, j-1])
-        if i+1 <  H and j+1 <  W:
-            colours.append(X[i+1, j+1])
-        if i-1 > -1 and j+1 <  W:
-            colours.append(X[i-1, j+1])
+def kmeans_vq(img, bins=10):
+    w, h = img.shape
+    img_array = img.reshape((w*h, 1))
 
-    first_order = [phi(next_colour - colour)/10 for next_colour in colours]
+    sample = shuffle(img_array, random_state=0)[:1000]
+    kmeans = KMeans(n_clusters=bins, random_state=0).fit(sample)
+    labels = kmeans.predict(img_array)
 
-    return 1 * sum(first_order)
+    image = np.zeros((w, h))
+    label_idx = 0
+    for i in range(w):
+        for j in range(h):
+            image[i][j] = kmeans.cluster_centers_[labels[label_idx]]
+            label_idx += 1
+    return image

@@ -86,6 +86,7 @@ namespace denoising {
     Potts(const std::vector<std::vector<float>> y, float b=1.0, float sigma=0.1, int nBins=10);
     ~Potts();
     std::vector<std::vector<float>> metropolisHastings(const unsigned int iterations);
+    std::vector<std::vector<float>> metropolisHastings(const unsigned int iterations, std::vector<std::vector<float>> x);
     std::vector<std::vector<float>> MAP(const unsigned int iterations, const float tInit=4, const float diffusion=0.995);
     inline std::vector<std::vector<std::vector<float>>> getHistory() { return history; }
   };

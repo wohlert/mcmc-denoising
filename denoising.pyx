@@ -13,6 +13,7 @@ cdef extern from "cpp/denoising.hpp" namespace "denoising":
   cdef cppclass Potts:
     Potts(vector[vector[float]], float, float, int) except +
     vector[vector[float]] metropolisHastings(int)
+    vector[vector[float]] metropolisHastings(int, vector[vector[float]])
     vector[vector[float]] MAP(int, float, float)
     vector[vector[vector[float]]] getHistory()
 
@@ -23,7 +24,7 @@ cdef class IsingMH:
       self.thisptr = new Ising(y, beta, sigma)
   def __dealloc__(self):
       del self.thisptr
-  def solve(self, iterations):
+  def metropolisHastings(self, iterations):
       return self.thisptr.metropolisHastings(iterations)
 
 # creating a cython wrapper class
@@ -33,8 +34,10 @@ cdef class PottsMH:
       self.thisptr = new Potts(y, beta, sigma, bins)
   def __dealloc__(self):
       del self.thisptr
-  def solve(self, iterations):
+  def metropolisHastings(self, iterations):
       return self.thisptr.metropolisHastings(iterations)
+  def metropolisHastings2(self, iterations, x):
+      return self.thisptr.metropolisHastings(iterations, x)
   def MAP(self, iterations, init=4, diffusion=0.995):
       return self.thisptr.MAP(iterations, init, diffusion)
   def history(self):
