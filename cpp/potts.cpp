@@ -1,10 +1,8 @@
-#include <memory>
 #include <cmath>
 //#include <random>
-#include <memory>
-#include <iostream>
 #include <cstdlib>
 #include <stdexcept>
+#include <memory>
 
 #include "denoising.hpp"
 
@@ -54,8 +52,9 @@ Potts::~Potts()
 /**
  * Uses Metropolis-Hastings to solve the image.
  */
-std::vector<std::vector<float>> Potts::solve(const unsigned int iterations)
+std::vector<std::vector<float>> Potts::metropolisHastings(const unsigned int iterations)
 {
+  history.clear();
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
       X[i][j] = discretise(Y[i][j], bins);
@@ -74,12 +73,52 @@ std::vector<std::vector<float>> Potts::solve(const unsigned int iterations)
 
         Point coords = { i, j };
         p = fmin(1, neighbourhood(coords, candidate)/neighbourhood(coords, X[i][j]));
+        //p = hook->update(p);
 
         if (((float) rand() / (RAND_MAX)) < p) {
           X[i][j] = candidate;
         }
       }
     }
+    //hook->iterate(k, X);
+    history.push_back(X);
+  }
+
+  return X;
+}
+
+std::vector<std::vector<float>> Potts::MAP(const unsigned int iterations, const float tInit, const float diffusion)
+{
+  history.clear();
+  float t = tInit;
+
+  for (int i = 0; i < height; i++) {
+    for (int j = 0; j < width; j++) {
+      X[i][j] = discretise(Y[i][j], bins);
+    }
+  }
+
+  float candidate;
+  float p = 0;
+
+  for (size_t k = 0; k < iterations; k++) {
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+
+        // Choose random candidate from X
+        candidate = (float)((rand()+1) % bins)/bins;
+
+        Point coords = { i, j };
+        p = fmin(1, neighbourhood(coords, candidate)/neighbourhood(coords, X[i][j]));
+        p = p * exp(-t);
+
+        if (((float) rand() / (RAND_MAX)) < p) {
+          X[i][j] = candidate;
+        }
+      }
+    }
+    history.push_back(X);
+    t = tInit * pow(diffusion, k);
   }
 
   return X;
@@ -119,3 +158,22 @@ float Potts::neighbourhood(const Point coords, const float colour)
 
   return colourSum;
 }
+
+/**
+int main(int argc, char const *argv[]) {
+  std::vector<std::vector<float>> Y;
+
+  Y.resize(10);
+  for (size_t i = 0; i < 10; i++) {
+    Y[i].resize(10);
+    for (size_t j = 0; j < 10; j++) {
+      Y[i][j] = i + j;
+    }
+  }
+
+  std::unique_ptr<Potts> potts(new Potts(Y, 10, 0.1, 10));
+  potts->MAP(10, 4);
+
+  return 0;
+}
+*/

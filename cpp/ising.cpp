@@ -32,7 +32,7 @@ Ising::~Ising()
 /**
  * Uses Metropolis-Hastings to solve the image.
  */
-std::vector<std::vector<int>> Ising::solve(const unsigned int iterations)
+std::vector<std::vector<int>> Ising::metropolisHastings(const unsigned int iterations)
 {
   unsigned int inverse;
   float h, hInverse;
