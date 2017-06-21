@@ -8,11 +8,13 @@ from libcpp.vector cimport vector
 cdef extern from "cpp/denoising.hpp" namespace "denoising":
   cdef cppclass Ising:
     Ising(vector[vector[float]], float, float) except +
-    vector[vector[int]] solve(int)
+    vector[vector[int]] metropolisHastings(int)
 
   cdef cppclass Potts:
     Potts(vector[vector[float]], float, float, int) except +
-    vector[vector[float]] solve(int)
+    vector[vector[float]] metropolisHastings(int)
+    vector[vector[float]] MAP(int, float, float)
+    vector[vector[vector[float]]] getHistory()
 
 # creating a cython wrapper class
 cdef class IsingMH:
@@ -22,7 +24,7 @@ cdef class IsingMH:
   def __dealloc__(self):
       del self.thisptr
   def solve(self, iterations):
-      return self.thisptr.solve(iterations)
+      return self.thisptr.metropolisHastings(iterations)
 
 # creating a cython wrapper class
 cdef class PottsMH:
@@ -32,4 +34,8 @@ cdef class PottsMH:
   def __dealloc__(self):
       del self.thisptr
   def solve(self, iterations):
-      return self.thisptr.solve(iterations)
+      return self.thisptr.metropolisHastings(iterations)
+  def MAP(self, iterations, init=4, diffusion=0.995):
+      return self.thisptr.MAP(iterations, init, diffusion)
+  def history(self):
+      return self.thisptr.getHistory()
