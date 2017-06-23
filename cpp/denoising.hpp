@@ -65,6 +65,7 @@ namespace denoising {
     Ising(const std::vector<std::vector<float>> y, float b=1.0, float sigma=0.1);
     ~Ising();
     std::vector<std::vector<int>> metropolisHastings(const unsigned int iterations);
+    std::vector<std::vector<int>> gibbs(const unsigned int iterations);
   };
 
   class Potts {

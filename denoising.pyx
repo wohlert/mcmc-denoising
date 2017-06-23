@@ -9,6 +9,7 @@ cdef extern from "cpp/denoising.hpp" namespace "denoising":
   cdef cppclass Ising:
     Ising(vector[vector[float]], float, float) except +
     vector[vector[int]] metropolisHastings(int)
+    vector[vector[int]] gibbs(int)
 
   cdef cppclass Potts:
     Potts(vector[vector[float]], float, float, int) except +
@@ -26,6 +27,8 @@ cdef class IsingMH:
       del self.thisptr
   def metropolisHastings(self, iterations):
       return self.thisptr.metropolisHastings(iterations)
+  def gibbs(self, iterations):
+      return self.thisptr.gibbs(iterations)
 
 # creating a cython wrapper class
 cdef class PottsMH:

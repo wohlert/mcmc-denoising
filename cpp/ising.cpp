@@ -75,9 +75,46 @@ std::vector<std::vector<int>> Ising::metropolisHastings(const unsigned int itera
   return X;
 }
 
+std::vector<std::vector<int>> Ising::gibbs(const unsigned int iterations)
+{
+  unsigned int nWhite, nBlack;
+  float p;
+
+  //std::random_device device;
+  //std::mt19937 generator(device());
+  //std::uniform_real_distribution<float> U(0, 1);
+
+  for (int i = 0; i < height; i++) {
+    for (int j = 0; j < width; j++) {
+      X[i][j] = ((float) rand() / (RAND_MAX));
+    }
+  }
+
+  for (size_t k = 0; k < iterations; k++) {
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+        Point coords = { i, j };
+
+        nBlack = neighbourhood(coords, 0);
+        nWhite = neighbourhood(coords, 1);
+
+        p = exp(beta*nBlack)/(exp(beta*nBlack) + exp(beta*nWhite));
+
+        if (((float) rand() / (RAND_MAX)) < p) {
+          X[i][j] = 1;
+        } else {
+          X[i][j] = 0;
+        }
+      }
+    }
+  }
+
+  return X;
+}
+
 int Ising::neighbourhood(const Point coords, const float colour)
 {
-  int same_colours = 0.0;
+  int same_colours = 0;
   int i = coords.x;
   int j = coords.y;
 
