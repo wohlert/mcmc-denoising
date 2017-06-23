@@ -6,13 +6,7 @@ This project is built up of two C++ classes, `Ising` and `Potts` for binary and 
 
 ## Examples
 
-**Original image**:
-
-![](data/lars-noisy-gray.jpg)
-
-**Denoised image using Metropolis-Hastings based on the Potts model**.
-
-![](data/lars-denoised.jpg)
+![](data/ultrasound.png)
 
 
 ## How to use
