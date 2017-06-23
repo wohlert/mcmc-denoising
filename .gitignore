@@ -6,3 +6,6 @@ build
 cpp/history
 cpp/build
 denoising.cpp
+*.ipynb
+*.pdf
+

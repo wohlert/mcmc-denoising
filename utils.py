@@ -62,6 +62,7 @@ def discretise(img, bins=10):
     image[image > (1 - 1/bins)] = 1 - 1/bins
     return image
 
+
 def kmeans_vq(img, bins=10):
     w, h = img.shape
     img_array = img.reshape((w*h, 1))

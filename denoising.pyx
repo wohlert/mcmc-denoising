@@ -3,6 +3,7 @@
 # distutils: sources = cpp/ising.cpp cpp/potts.cpp
 
 from libcpp.vector cimport vector
+from utils import mode
 
 # c++ interface to cython
 cdef extern from "cpp/denoising.hpp" namespace "denoising":
@@ -45,3 +46,7 @@ cdef class PottsMH:
       return self.thisptr.MAP(iterations, init, diffusion)
   def history(self):
       return self.thisptr.getHistory()
+
+def MPM(solver, iterations, images):
+  collection = [solver(iterations) for _ in range(images)]
+  return mode(collection, 0)
